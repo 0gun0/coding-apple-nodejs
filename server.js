@@ -15,43 +15,70 @@ app.get('/news',(요청, 응답) =>{
     db.collection('post' ).insertOne({title : '어쩌구'})
     // 응답.send('오늘 비옴')
 })
-app.get('/list', async (요청, 응답) =>{
-    let result = await db.collection('post').find().toArray()
-    // console.log(result[0].title)
-    // 응답.send(result[0].title)
 
-    응답.render('list.ejs', {글목록 : result})
-})
+app.get('/list', async (요청, 응답) => {
+  try {
+    // 'created_at' 필드를 기준으로 내림차순으로 정렬하여 게시글 가져오기
+    let result = await db.collection('post').find().sort({ created_at: -1 }).toArray();
+    console.log(result)
+    응답.render('list.ejs', { 글목록: result });
+  } catch (error) {
+    console.error(error);
+    응답.status(500).send('게시글 목록을 불러올 수 없습니다.');
+  }
+});
+
 
 app.get('/write', (요청, 응답) =>{
     응답.render('write.ejs')
 })
 
-app.post('/add', async (요청, 응답)=>{
-    console.log(요청.body)
+// app.post('/add', async (요청, 응답)=>{
+//     console.log(요청.body)
 
-    // if (제목이 빈칸이면){
-    //     db저장하지 말고 경고문 보내주고
-    // } else {
-    //     await db.collection('post').insertOne({title : 요청.body.title, content :
-    //         요청.body.content})
-    // }
+//     // if (제목이 빈칸이면){
+//     //     db저장하지 말고 경고문 보내주고
+//     // } else {
+//     //     await db.collection('post').insertOne({title : 요청.body.title, content :
+//     //         요청.body.content})
+//     // }
     
 
-    try {
-    if (요청.body.title == ''){
-        응답.send('제목 입력해라')
-    } else {
-      await db.collection('post').insertOne({title : 요청.body.title, content :
-    요청.body.content})
-    응답.redirect('/list')
-    }
-    }   catch(e) {
-        console.log(e) //에러메서지 출력해줌
-        응답.status(500).send('서버에러남')
-    }
+//     try {
+//     if (요청.body.title == ''){
+//         응답.send('제목 입력해라')
+//     } else {
+//       await db.collection('post').insertOne({title : 요청.body.title, content :
+//     요청.body.content})
+//     응답.redirect('/list')
+//     }
+//     }   catch(e) {
+//         console.log(e) //에러메서지 출력해줌
+//         응답.status(500).send('서버에러남')
+//     }
     
-})
+// })
+
+app.post('/add', async (요청, 응답) => {
+  try {
+    const { title, content } = 요청.body;
+
+    if (!title.trim()) {
+      return 응답.send('제목을 입력해주세요.');
+    }
+
+    // 게시글 추가
+    await db.collection('post').insertOne({ title, content, created_at : new Date() });
+
+    // 게시글 추가 후 최신 글로 정렬
+    const sortedResult = await db.collection('post').find().sort({ created_at: -1 }).toArray();
+
+    응답.redirect('/list');
+  } catch (error) {
+    console.error(error);
+    응답.status(500).send('서버 오류가 발생했습니다.');
+  }
+});
 
 app.get('/detail/:id', async (요청, 응답) => {
     try {
