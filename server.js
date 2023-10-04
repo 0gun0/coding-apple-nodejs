@@ -105,7 +105,15 @@ app.get('/edit/:id', async (요청, 응답)=>{
     응답.render('edit.ejs', {result : result})
 })
 
+app.post('/edit', async (요청, 응답)=>{
 
+  let result = await db.collection('post').updateOne({_id : new ObjectId
+    (요청.body.id) },
+    {$set : {title: 요청.body.title, content: 요청.body.content}})
+  console.log(요청.body)
+  응답.redirect('/list')
+  console.log(result)
+  })
 
 app.get('/shop',(요청, 응답) =>{
     응답.send('쇼핑페이지')
@@ -137,3 +145,4 @@ new MongoClient(url).connect().then((client)=>{
 }).catch((err)=>{
   console.log(err)
 })
+
