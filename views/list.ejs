@@ -20,10 +20,21 @@ New Posts
               <%= 글목록[i].title %>
             <a href="/edit/<%= 글목록[i]._id %>">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✏️edit</a>
             </a>
+            <span class="delete">🗑️</span>
           </h4>
           <p> 글내용 : <%= 글목록[i].content %></p>
         </div>
         <% } %>
+
+        <script>
+          // console.log('<%= 글목록[0]._id %>')
+          document.querySelectorAll('.delete')[0]
+          .addEventListener('click', function(){
+            fetch('/delete?docid=<%= 글목록[0]._id %>',{
+              method : 'DELETE'
+            })
+          })
+        </script> 
 
 
 </body>

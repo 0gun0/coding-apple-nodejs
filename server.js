@@ -115,6 +115,15 @@ app.post('/edit', async (요청, 응답)=>{
   console.log(result)
   })
 
+app.delete('/delete', async (요청, 응답) =>{
+  console.log(요청.query)
+  //db에 있던 document 삭제하기
+  await db.collection('post').deleteOne({_id : new ObjectId
+    (요청.query.docid)})
+    응답.send('삭제완료')
+})
+
+
 app.get('/shop',(요청, 응답) =>{
     응답.send('쇼핑페이지')
 })
