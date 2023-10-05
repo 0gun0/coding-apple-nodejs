@@ -7,6 +7,20 @@ app.set('vew engine', 'ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
+//passport 라이브러리 세팅
+const session = require('express-session')
+const passport = require('passport')
+const LocalStrategy = require('passport-local')
+
+app.use(passport.initialize())
+app.use(session({
+  secret: '암호화에 쓸 비번',
+  resave : false,
+  saveUninitialized : false,
+  cookie : {maxAge : 60 * 60 * 1000 } //쿠키 한시간 
+}))
+app.use(passport.session()) 
+
 app.get('/',(요청, 응답) =>{
     응답.sendFile(__dirname + '/index.html')
 })
@@ -123,7 +137,57 @@ app.delete('/delete', async (요청, 응답) =>{
     응답.send('삭제완료')
 })
 
+//passport 라이브러리 api :제출한 아이디/비번을 db와 비교하는 코드
+passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => {
+  let result = await db.collection('user').findOne({ username : 입력한아이디})
+  if (!result) {
+    return cb(null, false, { message: '아이디 DB에 없음' })
+  }
+  if (result.password == 입력한비번) {
+    return cb(null, result)
+  } else {
+    return cb(null, false, { message: '비번불일치' });
+  }
+}))
 
+
+app.get('/login', async (요청,응답)=>{
+  console.log(요청.user)
+  응답.render('login.ejs')
+})
+
+app.post('/login', async (요청,응답,next)=>{
+  
+  passport.authenticate('local',(error, user, info)=>{
+    if (error) return 응답.status(500).json(error)
+    if (!user) return 응답.status(401).json(info.message)
+    요청.logIn(user, (err)=>{
+      if (err) return next(err)
+      응답.redirect('/')
+    })
+  })(요청, 응답, next)
+})
+
+passport.serializeUser((user, done) => {
+  console.log(user)
+  process.nextTick(() => { // 내부코드를 비동기적으로 처리해줌
+    done(null, { id: user._id, username: user.username }) ///요청.logIn() 162번줄, 쓰면 자동실행
+  })
+})
+
+passport.deserializeUser(async (user, done) => {
+  let result = await db.collection('user').findOne({_id : new ObjectId
+  (user.id)})
+  delete result.password
+  process.nextTick(()=>{
+    done(null,result)
+  })
+  
+})
+
+
+
+//그냥 해논거
 app.get('/shop',(요청, 응답) =>{
     응답.send('쇼핑페이지')
 })
@@ -135,7 +199,7 @@ app.get('/about', (요청, 응답) =>{
 // }) //콜백함수 : 다른함수 파라미터에 들어가는 함수 
 //shop 접속시 app.get()함수 실행 그 후 콜백함수 실행됨.
 
-//숙제?? 시간요청
+//현재 시간요청
 app.get('/time', (요청, 응답)=>{
     응답.render('time.ejs', { data : new Date()})
 })
