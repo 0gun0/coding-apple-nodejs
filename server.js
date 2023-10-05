@@ -1,6 +1,7 @@
 const express = require('express'); //express라이브러리 인용문
 const { MongoClient, ObjectId } = require('mongodb');
 const app = express()
+const bcrypt = require('bcrypt')
 
 app.use(express.static(__dirname + '/public'))
 app.set('vew engine', 'ejs')
@@ -143,12 +144,14 @@ passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) =
   if (!result) {
     return cb(null, false, { message: '아이디 DB에 없음' })
   }
-  if (result.password == 입력한비번) {
+  if (await bcrypt.compare(입력한비번, result.password)){
     return cb(null, result)
   } else {
     return cb(null, false, { message: '비번불일치' });
   }
 }))
+//해싱된 비밀번호와 일치불일치 비교
+
 
 
 app.get('/login', async (요청,응답)=>{
@@ -184,7 +187,21 @@ passport.deserializeUser(async (user, done) => {
   })
   
 })
+//회원가입 기능
+app.get('/register', (요청, 응답) =>{
+  응답.render('register.ejs')
+})
 
+app.post('/register', async (요청, 응답) =>{
+
+  let 해시 = await bcrypt.hash(요청.body.password, 10 )
+  // console.log(해시)
+  await db.collection('user').insertOne({
+    username : 요청.body.username,
+    password : 해시
+  })
+  응답.redirect('/')
+})
 
 
 //그냥 해논거
