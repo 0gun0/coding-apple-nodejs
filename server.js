@@ -187,6 +187,7 @@ passport.deserializeUser(async (user, done) => {
   })
   
 })
+
 //회원가입 기능
 app.get('/register', (요청, 응답) =>{
   응답.render('register.ejs')
