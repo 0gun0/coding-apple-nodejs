@@ -82,8 +82,9 @@ app.post('/add', async (요청, 응답) => {
       return 응답.send('제목을 입력해주세요.');
     }
 
-    // 게시글 추가
-    await db.collection('post').insertOne({ title, content, created_at : new Date() });
+    // 게시글 추가 db에 들어가게끔 하는 데이터 정의
+    await db.collection('post').insertOne
+    ({ title, content, created_at : new Date(), });
 
     // 게시글 추가 후 최신 글로 정렬
     const sortedResult = await db.collection('post').find().sort({ created_at: -1 }).toArray();
@@ -129,6 +130,7 @@ app.post('/edit', async (요청, 응답)=>{
   응답.redirect('/list')
   console.log(result)
   })
+
 
 app.delete('/delete', async (요청, 응답) =>{
   console.log(요청.query)
